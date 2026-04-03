@@ -14,10 +14,6 @@ The key insight: HDR values are compressed into LogC3 [0, 1] range before VAE en
 
 This technique can be applied to **any** Diffusion Transformer architecture. This release uses Qwen-Image-Edit-2511 as the base model.
 
-<p align="center">
-  <img src="assets/pipeline.png" width="800">
-</p>
-
 ## Quick Start
 
 ```bash
