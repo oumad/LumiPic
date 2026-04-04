@@ -39,6 +39,20 @@ pixel = output.images[0].float().permute(1, 2, 0).cpu().clamp(0, 1)
 
 See [GitHub repo](https://github.com/oumad/HDRDiT) for complete inference code with EXR output.
 
+## Weights
+
+- `hdrdit_v1.safetensors` — LoRA weights (rank 32, 563 MB)
+
+## Quick Inference
+
+```bash
+git clone https://github.com/oumad/HDRDiT.git && cd HDRDiT
+pip install -r requirements.txt
+python inference.py --image photo.jpg
+```
+
+The base model and LoRA weights download automatically on first run.
+
 ## Training
 
 - **Base model**: Qwen-Image-Edit-2511 (frozen VAE)

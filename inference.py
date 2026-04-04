@@ -68,14 +68,18 @@ def tonemap_reinhard(hdr: np.ndarray, gamma: float = 2.2) -> np.ndarray:
 # ── Main inference ────────────────────────────────────────────────────────
 
 def load_pipeline(model_id: str = "Qwen/Qwen-Image-Edit-2511",
-                  lora_id: str = "oumad/HDRDiT",
+                  lora_id: str = "oumoumad/HDRDiT",
                   device: str = "cuda",
                   dtype=torch.bfloat16):
     """Load the base model and HDRDiT LoRA weights.
 
-    lora_id can be:
-      - A HuggingFace repo ID (e.g., "oumoumad/HDRDiT")
-      - A local path to a .safetensors file
+    Args:
+        model_id: HuggingFace ID for the base model.
+                  Default: "Qwen/Qwen-Image-Edit-2511"
+        lora_id:  HuggingFace repo ID (e.g., "oumoumad/HDRDiT")
+                  or local path to a .safetensors file.
+        device:   "cuda" or "cpu".
+        dtype:    torch.bfloat16 (recommended) or torch.float16.
     """
     from diffusers import QwenImageEditPipeline
 
@@ -84,8 +88,10 @@ def load_pipeline(model_id: str = "Qwen/Qwen-Image-Edit-2511",
 
     print(f"Loading HDRDiT LoRA: {lora_id}")
     if os.path.isfile(lora_id):
+        # Local .safetensors file
         pipe.load_lora_weights(lora_id)
     else:
+        # HuggingFace repo — downloads automatically
         pipe.load_lora_weights(lora_id)
 
     pipe = pipe.to(device)
@@ -174,8 +180,8 @@ def main():
                         help="Output directory (for batch)")
     parser.add_argument("--model", type=str, default="Qwen/Qwen-Image-Edit-2511",
                         help="Base model ID")
-    parser.add_argument("--lora", type=str, default="oumad/HDRDiT",
-                        help="LoRA weights (HuggingFace ID or local path)")
+    parser.add_argument("--lora", type=str, default="oumoumad/HDRDiT",
+                        help="LoRA weights (HuggingFace repo ID or local .safetensors path)")
     parser.add_argument("--steps", type=int, default=40,
                         help="Inference steps (default: 40)")
     parser.add_argument("--guidance", type=float, default=3.0,

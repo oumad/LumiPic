@@ -12,43 +12,112 @@ Convert any standard dynamic range (SDR) image into a true high dynamic range (H
 
 The key insight: HDR values are compressed into LogC3 [0, 1] range before VAE encoding. The VAE stays frozen — it treats LogC3 data as a normal image. The LoRA teaches the DiT to produce LogC3-encoded output. At inference, the VAE output is decompressed back to linear HDR.
 
-This technique can be applied to **any** Diffusion Transformer architecture. This release uses Qwen-Image-Edit-2511 as the base model.
+This technique can be applied to **any** Diffusion Transformer architecture. This release uses [Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) as the base model.
 
-## Quick Start
+## Setup
+
+### 1. Install dependencies
 
 ```bash
-pip install -r requirements.txt
-
-# Single image
-python inference.py --image photo.jpg
-
-# Directory of images
-python inference.py --image-dir ./inputs --output-dir ./outputs
-
-# Custom settings
-python inference.py --image photo.jpg --steps 40 --guidance 3.0 --seed 42
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+pip install diffusers transformers accelerate safetensors peft
+pip install Pillow opencv-python numpy
 ```
 
-The LoRA weights are automatically downloaded from [HuggingFace](https://huggingface.co/oumad/HDRDiT).
+Or use the requirements file:
+```bash
+pip install -r requirements.txt
+```
 
-## Requirements
+### 2. Download the LoRA weights
 
-- **GPU**: 48GB+ VRAM recommended (unquantized bf16)
-  - 32GB possible with 8-bit quantization
-  - 24GB possible with 4-bit quantization (quality tradeoff)
-- **Python**: 3.10+
-- **CUDA**: 12.0+
+The weights are hosted on HuggingFace and downloaded automatically on first run:
+
+- **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT) — `hdrdit_v1.safetensors` (563 MB)
+- **GitHub Release**: [v1.0](https://github.com/oumad/HDRDiT/releases/tag/v1.0) (alternative download)
+
+To use a local checkpoint instead of auto-download:
+```bash
+python inference.py --image photo.jpg --lora ./path/to/hdrdit_v1.safetensors
+```
+
+### 3. Base model
+
+The base model [Qwen/Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) (~54 GB) is downloaded automatically by `diffusers` on first run. Set `HF_HOME` to control where it's cached:
+
+```bash
+export HF_HOME=/path/to/cache  # optional
+```
+
+## Usage
+
+```bash
+# Single image → EXR
+python inference.py --image photo.jpg
+
+# Specify output path
+python inference.py --image photo.jpg --output photo_hdr.exr
+
+# Batch: directory of images
+python inference.py --image-dir ./inputs --output-dir ./outputs
+
+# Custom inference settings
+python inference.py --image photo.jpg --steps 40 --guidance 3.0 --seed 42
+
+# Skip preview PNG generation
+python inference.py --image photo.jpg --no-preview
+```
+
+### Python API
+
+```python
+from inference import load_pipeline, convert_to_hdr, save_exr, LogC3
+
+pipe = load_pipeline(
+    model_id="Qwen/Qwen-Image-Edit-2511",  # base model
+    lora_id="oumoumad/HDRDiT",              # LoRA (HuggingFace ID or local path)
+)
+logc3 = LogC3()
+
+from PIL import Image
+image = Image.open("photo.jpg").convert("RGB")
+
+# Returns numpy array [H, W, 3] in scene-linear HDR
+hdr = convert_to_hdr(pipe, image, logc3, steps=40, guidance=3.0, seed=42)
+
+# Save as EXR
+save_exr(hdr, "photo_hdr.exr")
+
+# Access raw values
+print(f"Max: {hdr.max():.1f}, Mean: {hdr.mean():.3f}")
+print(f"Pixels > 1.0: {(hdr > 1.0).mean() * 100:.1f}%")
+```
+
+### Prompt
+
+The model expects the prompt `"Convert this image to HDR"`. This is hardcoded in `inference.py`. Changing the prompt is not recommended as the LoRA was trained specifically with this prompt.
+
+## Hardware Requirements
+
+| GPU VRAM | Config | Notes |
+|----------|--------|-------|
+| **48GB+** | Unquantized bf16 | Recommended (best quality) |
+| **32GB** | 8-bit quantization | Good quality, some precision loss |
+| **24GB** | 4-bit quantization | Usable, noticeable quality tradeoff |
+
+The base model requires ~54 GB disk space for initial download.
 
 ## Output Format
 
-- **EXR files** in scene-linear RGB (Rec.709 primaries)
-- Values range from 0 to ~55 (LogC3 EI 800 ceiling)
-- Suitable for compositing in Nuke, Blender, DaVinci Resolve, etc.
-- Recommended display transform: ACES Output Transform (sRGB/Rec.709)
+- **Format**: OpenEXR, half-float (16-bit), ZIP compression
+- **Color space**: Scene-linear RGB, Rec.709/sRGB primaries
+- **Value range**: 0 to ~55.1 (LogC3 EI 800 ceiling)
+- **Recommended display transform**: ACES Output Transform (sRGB/Rec.709 100 nits)
+- **Compatible with**: Nuke, Blender, DaVinci Resolve, After Effects, Houdini
 
 ## Examples
 
-| Input (SDR) | Output (HDR, tonemapped for display) | EV -3 | EV +3 |
+| Input (SDR) | Output (HDR, ACES tonemapped) | EV -3 | EV +3 |
 |:-----------:|:-----------------------------------:|:-----:|:-----:|
 | ![](assets/examples/market_sdr.jpg) | ![](assets/examples/market_hdr.jpg) | ![](assets/examples/market_ev-3.jpg) | ![](assets/examples/market_ev+3.jpg) |
 | ![](assets/examples/car_sdr.jpg) | ![](assets/examples/car_hdr.jpg) | ![](assets/examples/car_ev-3.jpg) | ![](assets/examples/car_ev+3.jpg) |
@@ -65,17 +134,42 @@ The LoRA weights are automatically downloaded from [HuggingFace](https://hugging
 
 This encoding preserves highlight detail far better than simple gamma or PQ curves, and is widely used in the VFX industry.
 
+### Architecture
+
+```
+SDR Image (8-bit PNG/JPEG)
+    ↓
+Qwen-Image-Edit-2511 (frozen VAE + LoRA-adapted DiT)
+    ↓  prompt: "Convert this image to HDR"
+VAE output: LogC3-encoded [0, 1]
+    ↓
+LogC3 decompress → scene-linear HDR [0, ~55.1]
+    ↓
+Save as OpenEXR (half-float, ZIP)
+```
+
+- **VAE**: Frozen — treats LogC3 as a normal image
+- **DiT**: LoRA rank 32 (840 modules, 563 MB)
+- **Inference**: 40 steps, guidance scale 3.0, flowmatch scheduler
+
 ### Training
 
-The LoRA was trained using [Ostris AI-Toolkit](https://github.com/oumad/ai-toolkit/tree/npy-float32-targets) with:
+Trained using [Ostris AI-Toolkit](https://github.com/oumad/ai-toolkit/tree/npy-float32-targets) (fork with float32 .npy target support):
 
-- **Base model**: Qwen-Image-Edit-2511
-- **Dataset**: 204 diverse HDR image pairs (Poly Haven HDRIs, RED/ARRI camera footage, CG renders, Blender scenes)
-- **Target encoding**: Float32 LogC3-compressed .npy files
-- **SDR augmentation**: 61% of input images degraded with exposure variation, luminance-selective blur, contrast adjustments, JPEG compression, and white balance jitter — forcing robustness to real-world SDR sources
-- **LoRA rank**: 32, alpha 32
-- **Training**: 2000 steps, batch 4, bf16, AdamW, lr 1e-4, flowmatch scheduler
-- **Key config**: `cache_latents_to_disk: true` for efficient training
+| Parameter | Value |
+|-----------|-------|
+| Base model | Qwen-Image-Edit-2511 |
+| Dataset | 204 diverse HDR pairs |
+| Sources | Poly Haven HDRIs, RED/ARRI camera footage, CG renders, Blender scenes |
+| Target format | Float32 LogC3-compressed .npy |
+| SDR augmentation | 61% degraded (exposure ±1.5 stops, luminance blur, contrast, JPEG Q20-55, WB jitter) |
+| LoRA rank | 32, alpha 32 |
+| Steps | 2000 |
+| Batch size | 4 |
+| Precision | bf16 |
+| Optimizer | AdamW, lr 1e-4 |
+| Scheduler | Flowmatch (weighted timesteps) |
+| Key config | `cache_latents_to_disk: true` |
 
 ### Why LogC3 over other encodings?
 
@@ -87,6 +181,17 @@ The LoRA was trained using [Ostris AI-Toolkit](https://github.com/oumad/ai-toolk
 | sRGB gamma | 1.0 | 0 | Consumer displays |
 
 LogC3 provides sufficient range for most real-world content while staying within a compact [0, 1] range that existing VAEs handle well.
+
+## File Structure
+
+```
+HDRDiT/
+├── inference.py       # Complete inference pipeline
+├── logc3.py           # ARRI LogC3 transfer function (compress/decompress)
+├── requirements.txt   # Python dependencies
+├── LICENSE            # MIT
+└── assets/examples/   # Example images for README
+```
 
 ## Citation
 
