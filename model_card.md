@@ -41,7 +41,7 @@ See [GitHub repo](https://github.com/oumad/HDRDiT) for complete inference code w
 
 ## Weights
 
-- `hdrdit_v1.safetensors` — LoRA weights (rank 32, 563 MB)
+- `hdrdit_v1_QE2511.safetensors` — LoRA weights (rank 32, 563 MB)
 
 ## Quick Inference
 

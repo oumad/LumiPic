@@ -33,12 +33,12 @@ pip install -r requirements.txt
 
 The weights are hosted on HuggingFace and downloaded automatically on first run:
 
-- **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT) — `hdrdit_v1.safetensors` (563 MB)
+- **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT) — `hdrdit_v1_QE2511.safetensors` (563 MB)
 - **GitHub Release**: [v1.0](https://github.com/oumad/HDRDiT/releases/tag/v1.0) (alternative download)
 
 To use a local checkpoint instead of auto-download:
 ```bash
-python inference.py --image photo.jpg --lora ./path/to/hdrdit_v1.safetensors
+python inference.py --image photo.jpg --lora ./path/to/hdrdit_v1_QE2511.safetensors
 ```
 
 ### 3. Base model
