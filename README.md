@@ -206,7 +206,7 @@ HDRDiT/
 
 ## Acknowledgments
 
-- [Naomi Ken Korem](https://github.com/Naomi-Ken-Korem) ([HuggingFace](https://huggingface.co/naomiKenKorem)) — her research on the [LTX-2 HDR IC-LoRA](https://huggingface.co/Lightricks/LTX-Video) at Lightricks pioneered the LogC3 diffusion approach that this project builds upon
+- [Naomi Ken Korem](https://github.com/Naomi-Ken-Korem) ([HuggingFace](https://huggingface.co/naomiKenKorem)) — her research on HDR generation in the LTX model at Lightricks pioneered the LogC3 diffusion approach that this project builds upon
 - [Ostris AI-Toolkit](https://github.com/ostris/ai-toolkit) — training framework
 - [Qwen-Image-Edit](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) — base model
 - [Poly Haven](https://polyhaven.com/) — CC0 HDR environment maps
