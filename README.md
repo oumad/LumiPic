@@ -4,6 +4,8 @@
 
 Convert any standard dynamic range (SDR) image into a true high dynamic range (HDR) EXR file with 10+ stops of dynamic range — using a lightweight LoRA adapter on a frozen diffusion transformer.
 
+Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([Korem et al., 2026](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
+
 ## How It Works
 
 1. **Input**: Any SDR image (JPEG, PNG, etc.)
@@ -195,6 +197,8 @@ HDRDiT/
 
 ## Citation
 
+If you use HDRDiT, please also cite LumiVid, the paper that introduced the LogC3 diffusion technique this project builds on:
+
 ```bibtex
 @misc{hdrdit2026,
   title={HDRDiT: Single-Image HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA},
@@ -202,11 +206,22 @@ HDRDiT/
   year={2026},
   url={https://github.com/oumad/HDRDiT}
 }
+
+@article{korem2026lumivid,
+  title={LumiVid: HDR Video Generation via LogC3-Encoded Diffusion},
+  author={Korem, Naomi Ken and others},
+  journal={arXiv preprint arXiv:2604.11788},
+  year={2026},
+  url={https://hdr-lumivid.github.io/}
+}
 ```
 
 ## Acknowledgments
 
-- [Naomi Ken Korem](https://github.com/Naomi-Ken-Korem) ([HuggingFace](https://huggingface.co/naomiKenKorem)) — her research on HDR generation in the LTX model at Lightricks pioneered the LogC3 diffusion approach that this project builds upon
+This work is inspired by **LumiVid** (Korem et al., 2026) — the Lightricks research that pioneered LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts the same core technique (LogC3 compression into the VAE's normalized input range, LoRA-adapted DiT predicting log-encoded HDR) to a single-image editing DiT.
+
+- [LumiVid](https://hdr-lumivid.github.io/) — [paper](https://arxiv.org/abs/2604.11788) — Lightricks' HDR video generation research that introduced the LogC3 diffusion approach
+- [Naomi Ken Korem](https://github.com/Naomi-Ken-Korem) ([HuggingFace](https://huggingface.co/naomiKenKorem)) — first author on LumiVid; her research at Lightricks is the foundation this project builds upon
 - [Ostris AI-Toolkit](https://github.com/ostris/ai-toolkit) — training framework
 - [Qwen-Image-Edit](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) — base model
 - [Poly Haven](https://polyhaven.com/) — CC0 HDR environment maps
