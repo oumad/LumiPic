@@ -44,8 +44,9 @@ See [GitHub repo](https://github.com/oumad/HDRDiT) for complete inference code w
 
 ## Weights
 
-- `v5b_step2000.safetensors` — **current best** (rank 32, 563 MB)
-- `hdrdit_v1_QE2511.safetensors` — original v1 release (rank 32, 563 MB)
+- `v5b_step2000.safetensors` — **default** (rank 32, 563 MB). Most robust overall; best on stylized/AI-generated SDR inputs.
+- `v9_step1500.safetensors` — alternative (rank 32, 563 MB). LumiVid-aligned augs (joint EV shifts, luminance blur p=1.0). Slightly better on natural photo content, worse on AI-generated inputs.
+- `hdrdit_v1_QE2511.safetensors` — original v1 release (rank 32, 563 MB).
 
 ## Quick Inference
 

@@ -36,8 +36,9 @@ pip install -r requirements.txt
 The weights are hosted on HuggingFace and downloaded automatically on first run:
 
 - **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT)
-  - `v5b_step2000.safetensors` (563 MB) — **default**, best current checkpoint
-  - `hdrdit_v1_QE2511.safetensors` (563 MB) — original v1 release
+  - `v5b_step2000.safetensors` (563 MB) — **default**. Most robust overall; best on stylized/AI-generated SDR inputs.
+  - `v9_step1500.safetensors` (563 MB) — alternative. Trained with LumiVid-aligned augs (joint HDR+SDR EV shifts, luminance blur p=1.0). Slightly better on natural photo content (wins 7/10 scenes on our benchmark); worse on AI-generated inputs.
+  - `hdrdit_v1_QE2511.safetensors` (563 MB) — original v1 release.
 - **GitHub Release**: [v1.0](https://github.com/oumad/HDRDiT/releases/tag/v1.0) (alternative download)
 
 To use a specific checkpoint from the HF repo:
