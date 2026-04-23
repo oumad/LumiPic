@@ -35,12 +35,19 @@ pip install -r requirements.txt
 
 The weights are hosted on HuggingFace and downloaded automatically on first run:
 
-- **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT) — `hdrdit_v1_QE2511.safetensors` (563 MB)
+- **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT)
+  - `v5b_step2000.safetensors` (563 MB) — **default**, best current checkpoint
+  - `hdrdit_v1_QE2511.safetensors` (563 MB) — original v1 release
 - **GitHub Release**: [v1.0](https://github.com/oumad/HDRDiT/releases/tag/v1.0) (alternative download)
 
-To use a local checkpoint instead of auto-download:
+To use a specific checkpoint from the HF repo:
 ```bash
-python inference.py --image photo.jpg --lora ./path/to/hdrdit_v1_QE2511.safetensors
+python inference.py --image photo.jpg --weight-name v5b_step2000.safetensors
+```
+
+Or use a local `.safetensors` file:
+```bash
+python inference.py --image photo.jpg --lora ./path/to/v5b_step2000.safetensors
 ```
 
 ### 3. Base model
@@ -161,10 +168,10 @@ Trained using [Ostris AI-Toolkit](https://github.com/oumad/ai-toolkit/tree/npy-f
 | Parameter | Value |
 |-----------|-------|
 | Base model | Qwen-Image-Edit-2511 |
-| Dataset | 204 diverse HDR pairs |
+| Dataset | ~260 diverse HDR pairs |
 | Sources | Poly Haven HDRIs, RED/ARRI camera footage, CG renders, Blender scenes |
 | Target format | Float32 LogC3-compressed .npy |
-| SDR augmentation | 61% degraded (exposure ±1.5 stops, luminance blur, contrast, JPEG Q20-55, WB jitter) |
+| SDR augmentation | Exposure ±1.5 stops, luminance blur, contrast, JPEG Q20-55, WB jitter |
 | LoRA rank | 32, alpha 32 |
 | Steps | 2000 |
 | Batch size | 4 |
@@ -172,6 +179,8 @@ Trained using [Ostris AI-Toolkit](https://github.com/oumad/ai-toolkit/tree/npy-f
 | Optimizer | AdamW, lr 1e-4 |
 | Scheduler | Flowmatch (weighted timesteps) |
 | Key config | `cache_latents_to_disk: true` |
+
+The current release checkpoint (`v5b_step2000.safetensors`) comes from the 5th iteration of the dataset/augmentation pipeline; `hdrdit_v1_QE2511.safetensors` is kept available for reproducibility of the initial release.
 
 ### Why LogC3 over other encodings?
 

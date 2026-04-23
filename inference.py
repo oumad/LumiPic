@@ -67,32 +67,39 @@ def tonemap_reinhard(hdr: np.ndarray, gamma: float = 2.2) -> np.ndarray:
 
 # ── Main inference ────────────────────────────────────────────────────────
 
+DEFAULT_LORA_REPO = "oumoumad/HDRDiT"
+DEFAULT_LORA_WEIGHT = "v5b_step2000.safetensors"
+
+
 def load_pipeline(model_id: str = "Qwen/Qwen-Image-Edit-2511",
-                  lora_id: str = "oumoumad/HDRDiT",
+                  lora_id: str = DEFAULT_LORA_REPO,
+                  weight_name: str = DEFAULT_LORA_WEIGHT,
                   device: str = "cuda",
                   dtype=torch.bfloat16):
     """Load the base model and HDRDiT LoRA weights.
 
     Args:
-        model_id: HuggingFace ID for the base model.
-                  Default: "Qwen/Qwen-Image-Edit-2511"
-        lora_id:  HuggingFace repo ID (e.g., "oumoumad/HDRDiT")
-                  or local path to a .safetensors file.
-        device:   "cuda" or "cpu".
-        dtype:    torch.bfloat16 (recommended) or torch.float16.
+        model_id:    HuggingFace ID for the base model.
+                     Default: "Qwen/Qwen-Image-Edit-2511"
+        lora_id:     HuggingFace repo ID (e.g., "oumoumad/HDRDiT")
+                     or local path to a .safetensors file.
+        weight_name: Filename inside the HF repo (ignored for local paths).
+                     Default: "v5b_step2000.safetensors" (current best).
+                     Use "hdrdit_v1_QE2511.safetensors" for the v1 release.
+        device:      "cuda" or "cpu".
+        dtype:       torch.bfloat16 (recommended) or torch.float16.
     """
     from diffusers import QwenImageEditPipeline
 
     print(f"Loading base model: {model_id}")
     pipe = QwenImageEditPipeline.from_pretrained(model_id, torch_dtype=dtype)
 
-    print(f"Loading HDRDiT LoRA: {lora_id}")
     if os.path.isfile(lora_id):
-        # Local .safetensors file
+        print(f"Loading HDRDiT LoRA from local file: {lora_id}")
         pipe.load_lora_weights(lora_id)
     else:
-        # HuggingFace repo — downloads automatically
-        pipe.load_lora_weights(lora_id)
+        print(f"Loading HDRDiT LoRA from HF: {lora_id} ({weight_name})")
+        pipe.load_lora_weights(lora_id, weight_name=weight_name)
 
     pipe = pipe.to(device)
     return pipe
@@ -180,8 +187,10 @@ def main():
                         help="Output directory (for batch)")
     parser.add_argument("--model", type=str, default="Qwen/Qwen-Image-Edit-2511",
                         help="Base model ID")
-    parser.add_argument("--lora", type=str, default="oumoumad/HDRDiT",
+    parser.add_argument("--lora", type=str, default=DEFAULT_LORA_REPO,
                         help="LoRA weights (HuggingFace repo ID or local .safetensors path)")
+    parser.add_argument("--weight-name", type=str, default=DEFAULT_LORA_WEIGHT,
+                        help="Filename inside the HF repo (ignored for local paths)")
     parser.add_argument("--steps", type=int, default=40,
                         help="Inference steps (default: 40)")
     parser.add_argument("--guidance", type=float, default=3.0,
@@ -193,7 +202,7 @@ def main():
     args = parser.parse_args()
 
     # Load pipeline
-    pipe = load_pipeline(args.model, args.lora)
+    pipe = load_pipeline(args.model, args.lora, args.weight_name)
     logc3 = LogC3()
 
     # Collect images
