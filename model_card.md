@@ -27,7 +27,8 @@ import torch
 from PIL import Image
 
 pipe = QwenImageEditPipeline.from_pretrained("Qwen/Qwen-Image-Edit-2511", torch_dtype=torch.bfloat16)
-pipe.load_lora_weights("oumoumad/HDRDiT")
+# Default: v5b_step2000 (current best). Pass weight_name="hdrdit_v1_QE2511.safetensors" for v1.
+pipe.load_lora_weights("oumoumad/HDRDiT", weight_name="v5b_step2000.safetensors")
 pipe = pipe.to("cuda")
 
 image = Image.open("photo.jpg").convert("RGB")
@@ -43,7 +44,8 @@ See [GitHub repo](https://github.com/oumad/HDRDiT) for complete inference code w
 
 ## Weights
 
-- `hdrdit_v1_QE2511.safetensors` — LoRA weights (rank 32, 563 MB)
+- `v5b_step2000.safetensors` — **current best** (rank 32, 563 MB)
+- `hdrdit_v1_QE2511.safetensors` — original v1 release (rank 32, 563 MB)
 
 ## Quick Inference
 
@@ -59,6 +61,6 @@ The base model and LoRA weights download automatically on first run.
 
 - **Base model**: Qwen-Image-Edit-2511 (frozen VAE)
 - **Technique**: LoRA (rank 32) on DiT, trained to output ARRI LogC3 encoded HDR
-- **Dataset**: 204 diverse HDR pairs (Poly Haven, RED/ARRI footage, CG renders)
-- **SDR augmentation**: 61% degraded inputs (exposure, compression, blur, contrast)
+- **Dataset**: ~260 diverse HDR pairs (Poly Haven, RED/ARRI footage, CG renders, Blender scenes)
+- **SDR augmentation**: exposure shifts, luminance blur, contrast, JPEG, white-balance jitter
 - **Steps**: 2000, batch 4, bf16, AdamW, lr 1e-4
