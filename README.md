@@ -127,10 +127,15 @@ The base model requires ~54 GB disk space for initial download.
 
 ## Examples
 
-| Input (SDR) | Output (HDR, ACES tonemapped) | EV -3 | EV +3 |
-|:-----------:|:-----------------------------------:|:-----:|:-----:|
-| ![](assets/examples/market_sdr.jpg) | ![](assets/examples/market_hdr.jpg) | ![](assets/examples/market_ev-3.jpg) | ![](assets/examples/market_ev+3.jpg) |
-| ![](assets/examples/car_sdr.jpg) | ![](assets/examples/car_hdr.jpg) | ![](assets/examples/car_ev-3.jpg) | ![](assets/examples/car_ev+3.jpg) |
+Same 20 HDR outputs, viewed at two extreme exposure offsets. Detail survives in both the highlights (EV+6 shows blown-out SDR regions still carrying structure) and the shadows (EV-6 shows dim regions still holding information) — that's the dynamic range the LoRA is reconstructing.
+
+**Exposure +6 (highlights pulled down):**
+
+![EV+6](assets/examples/grid_ev+6.png)
+
+**Exposure -6 (shadows pushed up):**
+
+![EV-6](assets/examples/grid_ev-6.png)
 
 ## Technical Details
 
