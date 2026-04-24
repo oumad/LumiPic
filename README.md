@@ -4,7 +4,7 @@
 
 Convert any standard dynamic range (SDR) image into a true high dynamic range (HDR) EXR file with 10+ stops of dynamic range — using a lightweight LoRA adapter on a frozen diffusion transformer.
 
-Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([Korem et al., 2026](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
+Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
 
 ## How It Works
 
@@ -228,7 +228,7 @@ If you use HDRDiT, please also cite LumiVid, the paper that introduced the LogC3
 
 ## Acknowledgments
 
-This work is inspired by **LumiVid** (Korem et al., 2026) — the Lightricks research that pioneered LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts the same core technique (LogC3 compression into the VAE's normalized input range, LoRA-adapted DiT predicting log-encoded HDR) to a single-image editing DiT.
+This work is inspired by **LumiVid** ([project page](https://hdr-lumivid.github.io/) · [paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that pioneered LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts the same core technique (LogC3 compression into the VAE's normalized input range, LoRA-adapted DiT predicting log-encoded HDR) to a single-image editing DiT.
 
 - [LumiVid](https://hdr-lumivid.github.io/) — [paper](https://arxiv.org/abs/2604.11788) — Lightricks' HDR video generation research that introduced the LogC3 diffusion approach
 - [Naomi Ken Korem](https://github.com/Naomi-Ken-Korem) ([HuggingFace](https://huggingface.co/naomiKenKorem)) — first author on LumiVid; her research at Lightricks is the foundation this project builds upon
