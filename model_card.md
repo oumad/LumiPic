@@ -19,6 +19,18 @@ Converts standard dynamic range (SDR) images to high dynamic range (HDR) EXR fil
 
 Based on [LumiVid](https://hdr-lumivid.github.io/) ([paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that introduced LogC3-encoded diffusion for HDR generation. LumiPic adapts that technique to a single-image editing DiT.
 
+## Examples
+
+Same 20 HDR outputs, viewed at two extreme exposure offsets — highlights still hold structure at EV+6, shadows still hold information at EV-6.
+
+**Exposure +6 (highlights pulled down):**
+
+![EV+6](grid_ev+6.png)
+
+**Exposure -6 (shadows pushed up):**
+
+![EV-6](grid_ev-6.png)
+
 ## Usage
 
 ```python
