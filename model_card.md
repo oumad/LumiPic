@@ -15,7 +15,7 @@ license: mit
 
 # LumiPic — Single-Image SDR to HDR LoRA
 
-Converts standard dynamic range (SDR) images to high dynamic range (HDR) EXR files with 10+ stops of dynamic range.
+Converts standard dynamic range (SDR) images to high dynamic range (HDR) EXR files — float-valued, with range well beyond what an 8-bit SDR output can carry.
 
 Based on [LumiVid](https://hdr-lumivid.github.io/) ([paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that introduced LogC3-encoded diffusion for HDR generation. LumiPic adapts that technique to a single-image editing DiT.
 

@@ -2,7 +2,7 @@
 
 **Single-Image HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA**
 
-Convert any standard dynamic range (SDR) image into a true high dynamic range (HDR) EXR file with 10+ stops of dynamic range — using a lightweight LoRA adapter on a frozen diffusion transformer.
+Convert any standard dynamic range (SDR) image into a true high dynamic range (HDR) EXR file — float-valued, with range well beyond what an 8-bit SDR output can carry, using a lightweight LoRA adapter on a frozen diffusion transformer.
 
 Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. LumiPic adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
 
