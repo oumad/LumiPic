@@ -13,11 +13,11 @@ base_model: Qwen/Qwen-Image-Edit-2511
 license: mit
 ---
 
-# HDRDiT — Single-Image SDR to HDR LoRA
+# LumiPic — Single-Image SDR to HDR LoRA
 
 Converts standard dynamic range (SDR) images to high dynamic range (HDR) EXR files with 10+ stops of dynamic range.
 
-Based on [LumiVid](https://hdr-lumivid.github.io/) ([paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that introduced LogC3-encoded diffusion for HDR generation. HDRDiT adapts that technique to a single-image editing DiT.
+Based on [LumiVid](https://hdr-lumivid.github.io/) ([paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that introduced LogC3-encoded diffusion for HDR generation. LumiPic adapts that technique to a single-image editing DiT.
 
 ## Usage
 
@@ -28,7 +28,7 @@ from PIL import Image
 
 pipe = QwenImageEditPipeline.from_pretrained("Qwen/Qwen-Image-Edit-2511", torch_dtype=torch.bfloat16)
 # Default: v5b_step2000 (current best). Pass weight_name="hdrdit_v1_QE2511.safetensors" for v1.
-pipe.load_lora_weights("oumoumad/HDRDiT", weight_name="v5b_step2000.safetensors")
+pipe.load_lora_weights("oumoumad/LumiPic", weight_name="v5b_step2000.safetensors")
 pipe = pipe.to("cuda")
 
 image = Image.open("photo.jpg").convert("RGB")
@@ -40,7 +40,7 @@ pixel = output.images[0].float().permute(1, 2, 0).cpu().clamp(0, 1)
 # Apply LogC3 decompression (see logc3.py in GitHub repo)
 ```
 
-See [GitHub repo](https://github.com/oumad/HDRDiT) for complete inference code with EXR output.
+See [GitHub repo](https://github.com/oumad/LumiPic) for complete inference code with EXR output.
 
 ## Weights
 
@@ -51,7 +51,7 @@ See [GitHub repo](https://github.com/oumad/HDRDiT) for complete inference code w
 ## Quick Inference
 
 ```bash
-git clone https://github.com/oumad/HDRDiT.git && cd HDRDiT
+git clone https://github.com/oumad/LumiPic.git && cd LumiPic
 pip install -r requirements.txt
 python inference.py --image photo.jpg
 ```

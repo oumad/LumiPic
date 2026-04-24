@@ -1,10 +1,10 @@
-# HDRDiT
+# LumiPic
 
 **Single-Image HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA**
 
 Convert any standard dynamic range (SDR) image into a true high dynamic range (HDR) EXR file with 10+ stops of dynamic range — using a lightweight LoRA adapter on a frozen diffusion transformer.
 
-Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
+Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. LumiPic adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
 
 ## How It Works
 
@@ -35,11 +35,11 @@ pip install -r requirements.txt
 
 The weights are hosted on HuggingFace and downloaded automatically on first run:
 
-- **HuggingFace**: [oumoumad/HDRDiT](https://huggingface.co/oumoumad/HDRDiT)
+- **HuggingFace**: [oumoumad/LumiPic](https://huggingface.co/oumoumad/LumiPic)
   - `v5b_step2000.safetensors` (563 MB) — **default**. Most robust overall; best on stylized/AI-generated SDR inputs.
   - `v9_step1500.safetensors` (563 MB) — alternative. Trained with LumiVid-aligned augs (joint HDR+SDR EV shifts, luminance blur p=1.0). Slightly better on natural photo content (wins 7/10 scenes on our benchmark); worse on AI-generated inputs.
   - `hdrdit_v1_QE2511.safetensors` (563 MB) — original v1 release.
-- **GitHub Release**: [v1.0](https://github.com/oumad/HDRDiT/releases/tag/v1.0) (alternative download)
+- **GitHub Release**: [v1.0](https://github.com/oumad/LumiPic/releases/tag/v1.0) (alternative download)
 
 To use a specific checkpoint from the HF repo:
 ```bash
@@ -85,7 +85,7 @@ from inference import load_pipeline, convert_to_hdr, save_exr, LogC3
 
 pipe = load_pipeline(
     model_id="Qwen/Qwen-Image-Edit-2511",  # base model
-    lora_id="oumoumad/HDRDiT",              # LoRA (HuggingFace ID or local path)
+    lora_id="oumoumad/LumiPic",              # LoRA (HuggingFace ID or local path)
 )
 logc3 = LogC3()
 
@@ -197,7 +197,7 @@ LogC3 provides sufficient range for most real-world content while staying within
 ## File Structure
 
 ```
-HDRDiT/
+LumiPic/
 ├── inference.py       # Complete inference pipeline
 ├── logc3.py           # ARRI LogC3 transfer function (compress/decompress)
 ├── requirements.txt   # Python dependencies
@@ -207,14 +207,14 @@ HDRDiT/
 
 ## Citation
 
-If you use HDRDiT, please also cite LumiVid, the paper that introduced the LogC3 diffusion technique this project builds on:
+If you use LumiPic, please also cite LumiVid, the paper that introduced the LogC3 diffusion technique this project builds on:
 
 ```bibtex
-@misc{hdrdit2026,
-  title={HDRDiT: Single-Image HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA},
+@misc{lumipic2026,
+  title={LumiPic: Single-Image HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA},
   author={Oumoumad},
   year={2026},
-  url={https://github.com/oumad/HDRDiT}
+  url={https://github.com/oumad/LumiPic}
 }
 
 @article{korem2026lumivid,
@@ -228,7 +228,7 @@ If you use HDRDiT, please also cite LumiVid, the paper that introduced the LogC3
 
 ## Acknowledgments
 
-This work is inspired by **LumiVid** ([project page](https://hdr-lumivid.github.io/) · [paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that pioneered LogC3-encoded diffusion for HDR generation in the LTX-2 video model. HDRDiT adapts the same core technique (LogC3 compression into the VAE's normalized input range, LoRA-adapted DiT predicting log-encoded HDR) to a single-image editing DiT.
+This work is inspired by **LumiVid** ([project page](https://hdr-lumivid.github.io/) · [paper](https://arxiv.org/abs/2604.11788)) — the Lightricks research that pioneered LogC3-encoded diffusion for HDR generation in the LTX-2 video model. LumiPic adapts the same core technique (LogC3 compression into the VAE's normalized input range, LoRA-adapted DiT predicting log-encoded HDR) to a single-image editing DiT.
 
 - [LumiVid](https://hdr-lumivid.github.io/) — [paper](https://arxiv.org/abs/2604.11788) — Lightricks' HDR video generation research that introduced the LogC3 diffusion approach
 - [Naomi Ken Korem](https://github.com/Naomi-Ken-Korem) ([HuggingFace](https://huggingface.co/naomiKenKorem)) — first author on LumiVid; her research at Lightricks is the foundation this project builds upon

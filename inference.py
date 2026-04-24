@@ -1,4 +1,4 @@
-"""HDRDiT — Single-Image SDR to HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA.
+"""LumiPic — Single-Image SDR to HDR Reconstruction via LogC3-Encoded Diffusion Transformer LoRA.
 
 Converts standard dynamic range (SDR) images to high dynamic range (HDR) EXR files
 using a LoRA fine-tuned on Qwen-Image-Edit-2511 with ARRI LogC3 encoding.
@@ -67,7 +67,7 @@ def tonemap_reinhard(hdr: np.ndarray, gamma: float = 2.2) -> np.ndarray:
 
 # ── Main inference ────────────────────────────────────────────────────────
 
-DEFAULT_LORA_REPO = "oumoumad/HDRDiT"
+DEFAULT_LORA_REPO = "oumoumad/LumiPic"
 DEFAULT_LORA_WEIGHT = "v5b_step2000.safetensors"
 
 
@@ -76,12 +76,12 @@ def load_pipeline(model_id: str = "Qwen/Qwen-Image-Edit-2511",
                   weight_name: str = DEFAULT_LORA_WEIGHT,
                   device: str = "cuda",
                   dtype=torch.bfloat16):
-    """Load the base model and HDRDiT LoRA weights.
+    """Load the base model and LumiPic LoRA weights.
 
     Args:
         model_id:    HuggingFace ID for the base model.
                      Default: "Qwen/Qwen-Image-Edit-2511"
-        lora_id:     HuggingFace repo ID (e.g., "oumoumad/HDRDiT")
+        lora_id:     HuggingFace repo ID (e.g., "oumoumad/LumiPic")
                      or local path to a .safetensors file.
         weight_name: Filename inside the HF repo (ignored for local paths).
                      Default: "v5b_step2000.safetensors" (current best).
@@ -95,10 +95,10 @@ def load_pipeline(model_id: str = "Qwen/Qwen-Image-Edit-2511",
     pipe = QwenImageEditPipeline.from_pretrained(model_id, torch_dtype=dtype)
 
     if os.path.isfile(lora_id):
-        print(f"Loading HDRDiT LoRA from local file: {lora_id}")
+        print(f"Loading LumiPic LoRA from local file: {lora_id}")
         pipe.load_lora_weights(lora_id)
     else:
-        print(f"Loading HDRDiT LoRA from HF: {lora_id} ({weight_name})")
+        print(f"Loading LumiPic LoRA from HF: {lora_id} ({weight_name})")
         pipe.load_lora_weights(lora_id, weight_name=weight_name)
 
     pipe = pipe.to(device)
@@ -175,7 +175,7 @@ def process_image(pipe, logc3, image_path, output_path,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="HDRDiT — Convert SDR images to HDR EXR files"
+        description="LumiPic — Convert SDR images to HDR EXR files"
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--image", type=str, help="Single input image path")
