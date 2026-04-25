@@ -70,6 +70,10 @@ python inference.py --image photo.jpg
 
 The base model and LoRA weights download automatically on first run.
 
+## ComfyUI
+
+A ready-to-use workflow lives in this repo: [`SDR_To_HDR_QE11.json`](https://huggingface.co/oumoumad/LumiPic/resolve/main/SDR_To_HDR_QE11.json?download=true). Drop it onto your ComfyUI canvas — it loads Qwen-Image-Edit-2511 + a LumiPic LoRA and saves the result as an EXR via the `Gear · LogC3 Decode + Save EXR` node from [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear). Place `v5b_step2000.safetensors` in `ComfyUI/models/loras/qwen/hdr/` and queue with prompt `"Convert this image to HDR"`.
+
 ## Training
 
 - **Base model**: Qwen-Image-Edit-2511 (frozen VAE)
