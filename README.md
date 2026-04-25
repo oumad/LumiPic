@@ -107,6 +107,18 @@ print(f"Pixels > 1.0: {(hdr > 1.0).mean() * 100:.1f}%")
 
 The model expects the prompt `"Convert this image to HDR"`. This is hardcoded in `inference.py`. Changing the prompt is not recommended as the LoRA was trained specifically with this prompt.
 
+## ComfyUI
+
+A ready-to-use ComfyUI workflow is included: [`comfyui/SDR_To_HDR_QE11.json`](comfyui/SDR_To_HDR_QE11.json) (also available on the [HuggingFace repo](https://huggingface.co/oumoumad/LumiPic)).
+
+The workflow loads Qwen-Image-Edit-2511 + a LumiPic LoRA, runs the conversion, and saves the result as an `.exr` via the `Gear · LogC3 Decode + Save EXR` node from [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) — which handles the LogC3 decode and float16 EXR write.
+
+To use:
+1. Drop the `.json` onto your ComfyUI canvas
+2. Place `v5b_step2000.safetensors` (or `v9_step1500.safetensors`) in `ComfyUI/models/loras/qwen/hdr/`
+3. Install [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) custom nodes
+4. Queue with prompt `"Convert this image to HDR"`
+
 ## Hardware Requirements
 
 | GPU VRAM | Config | Notes |
