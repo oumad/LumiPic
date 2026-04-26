@@ -4,7 +4,14 @@
 
 Convert any standard dynamic range (SDR) image into a true high dynamic range (HDR) EXR file — float-valued, with range well beyond what an 8-bit SDR output can carry, using a lightweight LoRA adapter on a frozen diffusion transformer.
 
-Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. LumiPic adapts that technique to a single-image editing DiT (Qwen-Image-Edit-2511).
+Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https://arxiv.org/abs/2604.11788)), which introduced LogC3-encoded diffusion for HDR generation in the LTX-2 video model. **LumiPic** is the same technique adapted to single-image diffusion transformers — *the technique is base-model agnostic*. Two trained LoRA families are currently published, on different bases:
+
+| Base model | Status | LoRA size | Inference speed | Notes |
+|---|---|---|---|---|
+| **Qwen-Image-Edit-2511** | mature (5+ iterations) | 563 MB | 1× | best quality, ~20B base, ~54 GB to download |
+| **FLUX.2-klein-base-4B** | **alpha** (1 iteration) | 88 MB | ~2× faster | Apache 2.0, ~8 GB base, faster end-to-end |
+
+The Qwen-Image-Edit path is the production default. The klein-4B path is an early experiment — same dataset, same hyperparameters — that ran fast enough to be worth shipping but hasn't been iterated on. See "Quickstart" below to pick one.
 
 ## How It Works
 
@@ -31,32 +38,40 @@ Or use the requirements file:
 pip install -r requirements.txt
 ```
 
-### 2. Download the LoRA weights
+### 2. Pick a base + LoRA
 
-The weights are hosted on HuggingFace and downloaded automatically on first run:
+All weights are on [oumoumad/LumiPic](https://huggingface.co/oumoumad/LumiPic) and download automatically on first run.
 
-- **HuggingFace**: [oumoumad/LumiPic](https://huggingface.co/oumoumad/LumiPic)
-  - `v5b_step2000.safetensors` (563 MB) — **default**. Most robust overall; best on stylized/AI-generated SDR inputs.
-  - `v9_step1500.safetensors` (563 MB) — alternative. Trained with LumiVid-aligned augs (joint HDR+SDR EV shifts, luminance blur p=1.0). Slightly better on natural photo content (wins 7/10 scenes on our benchmark); worse on AI-generated inputs.
-  - `hdrdit_v1_QE2511.safetensors` (563 MB) — original v1 release.
-- **GitHub Release**: [v1.0](https://github.com/oumad/LumiPic/releases/tag/v1.0) (alternative download)
+**Qwen-Image-Edit-2511 path** (mature, recommended for production):
+- `v5b_step2000.safetensors` — **Qwen default**. Most robust; best on stylized/AI-generated SDR inputs.
+- `v9_step1500.safetensors` — alternative. LumiVid-aligned augs; slightly better on natural photo content.
+- `hdrdit_v1_QE2511.safetensors` — original v1 release.
 
-To use a specific checkpoint from the HF repo:
 ```bash
-python inference.py --image photo.jpg --weight-name v5b_step2000.safetensors
+python inference.py --image photo.jpg                                   # uses v5b by default
+python inference.py --image photo.jpg --weight-name v9_step1500.safetensors
 ```
 
-Or use a local `.safetensors` file:
+**FLUX.2-klein-base-4B path** (alpha, faster):
+- `klein4b_alpha_step1750.safetensors` — **klein default**. Faithful HDR look, well-balanced.
+- `klein4b_alpha_step1000.safetensors` — alternative. More aggressive HDR (higher p99) but tends to blow out highlights on bright scenes.
+
 ```bash
-python inference.py --image photo.jpg --lora ./path/to/v5b_step2000.safetensors
+python inference_klein.py --image photo.jpg                                          # uses 1750 by default
+python inference_klein.py --image photo.jpg --weight-name klein4b_alpha_step1000.safetensors
 ```
 
 ### 3. Base model
 
-The base model [Qwen/Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) (~54 GB) is downloaded automatically by `diffusers` on first run. Set `HF_HOME` to control where it's cached:
+Whichever LoRA you pick, the base model downloads automatically on first run via `diffusers`:
+
+| LoRA family | Base model | Download size |
+|---|---|---|
+| `v5b_*`, `v9_*`, `hdrdit_v1_*` | [Qwen/Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) | ~54 GB |
+| `klein4b_*` | [black-forest-labs/FLUX.2-klein-base-4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B) | ~8 GB |
 
 ```bash
-export HF_HOME=/path/to/cache  # optional
+export HF_HOME=/path/to/cache  # optional, controls where bases cache
 ```
 
 ## Usage
@@ -80,27 +95,34 @@ python inference.py --image photo.jpg --no-preview
 
 ### Python API
 
+**Qwen-Image-Edit-2511 path** (production):
 ```python
-from inference import load_pipeline, convert_to_hdr, save_exr, LogC3
-
-pipe = load_pipeline(
-    model_id="Qwen/Qwen-Image-Edit-2511",  # base model
-    lora_id="oumoumad/LumiPic",              # LoRA (HuggingFace ID or local path)
-)
-logc3 = LogC3()
-
+from inference import load_pipeline, convert_to_hdr, save_exr
+from logc3 import LogC3
 from PIL import Image
+
+pipe = load_pipeline()           # uses oumoumad/LumiPic + v5b_step2000.safetensors by default
+logc3 = LogC3()
 image = Image.open("photo.jpg").convert("RGB")
 
-# Returns numpy array [H, W, 3] in scene-linear HDR
-hdr = convert_to_hdr(pipe, image, logc3, steps=40, guidance=3.0, seed=42)
-
-# Save as EXR
+hdr = convert_to_hdr(pipe, image, logc3, steps=40, guidance=3.0, seed=42)  # [H, W, 3] linear
 save_exr(hdr, "photo_hdr.exr")
+print(f"max: {hdr.max():.1f}, p99: {float(__import__('numpy').percentile(hdr,99)):.2f}")
+```
 
-# Access raw values
-print(f"Max: {hdr.max():.1f}, Mean: {hdr.mean():.3f}")
-print(f"Pixels > 1.0: {(hdr > 1.0).mean() * 100:.1f}%")
+**FLUX.2-klein-base-4B path** (alpha):
+```python
+from inference_klein import load_pipeline, convert_to_hdr, save_exr
+from logc3 import LogC3
+from PIL import Image
+
+# Klein needs `pip install "git+https://github.com/huggingface/diffusers.git"` (>=0.37.0.dev0)
+pipe = load_pipeline()           # uses oumoumad/LumiPic + klein4b_alpha_step1750.safetensors
+logc3 = LogC3()
+image = Image.open("photo.jpg").convert("RGB")
+
+hdr = convert_to_hdr(pipe, image, logc3, steps=25, guidance=3.0, seed=42)
+save_exr(hdr, "photo_hdr.exr")
 ```
 
 ### Prompt
@@ -109,13 +131,18 @@ The model expects the prompt `"Convert this image to HDR"`. This is hardcoded in
 
 ## ComfyUI
 
-A ready-to-use ComfyUI workflow is included: [`comfyui/SDR_To_HDR_QE11.json`](comfyui/SDR_To_HDR_QE11.json) (also available on the [HuggingFace repo](https://huggingface.co/oumoumad/LumiPic)).
+Two ready-to-use workflows are included, one for each base:
 
-The workflow loads Qwen-Image-Edit-2511 + a LumiPic LoRA, runs the conversion, and saves the result as an `.exr` via the `Gear · LogC3 Decode + Save EXR` node from [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) — which handles the LogC3 decode and float16 EXR write.
+| Workflow | Base + LoRA | Folder |
+|---|---|---|
+| [`comfyui/SDR_To_HDR_QE11.json`](comfyui/SDR_To_HDR_QE11.json) | Qwen-Image-Edit-2511 + `v5b_step2000.safetensors` | `ComfyUI/models/loras/qwen/hdr/` |
+| [`comfyui/SDR_To_HDR_klein4b.json`](comfyui/SDR_To_HDR_klein4b.json) | FLUX.2-klein-base-4B + `klein4b_alpha_step1750.safetensors` | `ComfyUI/models/loras/flux/hdr/` |
 
-To use:
+Both also live on the [HuggingFace repo](https://huggingface.co/oumoumad/LumiPic). They both use the `Gear · LogC3 Decode + Save EXR` node from [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) for the LogC3 decode + float16 EXR write.
+
+To use either:
 1. Drop the `.json` onto your ComfyUI canvas
-2. Place `v5b_step2000.safetensors` (or `v9_step1500.safetensors`) in `ComfyUI/models/loras/qwen/hdr/`
+2. Place the matching LoRA file in the folder shown above
 3. Install [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) custom nodes
 4. Queue with prompt `"Convert this image to HDR"`
 
@@ -166,7 +193,7 @@ This encoding preserves highlight detail far better than simple gamma or PQ curv
 ```
 SDR Image (8-bit PNG/JPEG)
     ↓
-Qwen-Image-Edit-2511 (frozen VAE + LoRA-adapted DiT)
+DiT base model (frozen VAE + LoRA-adapted transformer)
     ↓  prompt: "Convert this image to HDR"
 VAE output: LogC3-encoded [0, 1]
     ↓
@@ -175,30 +202,34 @@ LogC3 decompress → scene-linear HDR [0, ~55.1]
 Save as OpenEXR (half-float, ZIP)
 ```
 
-- **VAE**: Frozen — treats LogC3 as a normal image
-- **DiT**: LoRA rank 32 (840 modules, 563 MB)
-- **Inference**: 40 steps, guidance scale 3.0, flowmatch scheduler
+- **VAE**: Frozen — treats LogC3 as a normal image (validated: shadow MSE ~5e-5 on FLUX.2 VAE)
+- **DiT**: LoRA rank 32 on the transformer
+  - Qwen-Image-Edit-2511: 840 modules, 563 MB per LoRA
+  - FLUX.2-klein-base-4B: 80 modules, 88 MB per LoRA
+- **Inference**: 25–40 steps, guidance scale 3.0, flowmatch scheduler
+
+The technique is base-model agnostic — any DiT with a "normal-image" VAE can host a LumiPic LoRA.
 
 ### Training
 
-Trained using [Ostris AI-Toolkit](https://github.com/oumad/ai-toolkit/tree/npy-float32-targets) (fork with float32 .npy target support):
+Trained with [Ostris AI-Toolkit](https://github.com/ostris/ai-toolkit). Common to both bases:
 
 | Parameter | Value |
 |-----------|-------|
-| Base model | Qwen-Image-Edit-2511 |
-| Dataset | ~260 diverse HDR pairs |
+| Dataset | ~260–606 HDR pairs (varies by version) |
 | Sources | Poly Haven HDRIs, RED/ARRI camera footage, CG renders, Blender scenes |
-| Target format | Float32 LogC3-compressed .npy |
 | SDR augmentation | Exposure ±1.5 stops, luminance blur, contrast, JPEG Q20-55, WB jitter |
 | LoRA rank | 32, alpha 32 |
 | Steps | 2000 |
-| Batch size | 4 |
+| Batch size | 4 (1 × grad_accum 4 for klein) |
 | Precision | bf16 |
 | Optimizer | AdamW, lr 1e-4 |
 | Scheduler | Flowmatch (weighted timesteps) |
 | Key config | `cache_latents_to_disk: true` |
 
-The current release checkpoint (`v5b_step2000.safetensors`) comes from the 5th iteration of the dataset/augmentation pipeline; `hdrdit_v1_QE2511.safetensors` is kept available for reproducibility of the initial release.
+**Qwen-Image-Edit-2511 LoRAs** are trained with the [npy-float32-targets fork](https://github.com/oumad/ai-toolkit/tree/npy-float32-targets) of ai-toolkit (float32 `.npy` targets for shadow precision). The current release `v5b_step2000.safetensors` is from the 5th iteration of the dataset/augmentation pipeline; `hdrdit_v1_QE2511.safetensors` is kept for reproducibility.
+
+**FLUX.2-klein-base-4B LoRAs** are trained with upstream ai-toolkit (8-bit PNG targets). The published `klein4b_alpha_*` weights come from a single 2000-step run on V8 data — no iteration yet, hence "alpha". Note: training the klein image-edit path requires a 4-line VAE-on-GPU patch to `flux2_model.py` (see [training notes](https://github.com/oumad/LumiPic/issues) — bundle on request). Klein converges fast: peak HDR range at ~step 1000, sweet spot around 1500–1750.
 
 ### Why LogC3 over other encodings?
 
@@ -215,11 +246,13 @@ LogC3 provides sufficient range for most real-world content while staying within
 
 ```
 LumiPic/
-├── inference.py       # Complete inference pipeline
-├── logc3.py           # ARRI LogC3 transfer function (compress/decompress)
-├── requirements.txt   # Python dependencies
-├── LICENSE            # MIT
-└── assets/examples/   # Example images for README
+├── inference.py        # Qwen-Image-Edit-2511 inference (production)
+├── inference_klein.py  # FLUX.2-klein-base-4B inference (alpha)
+├── logc3.py            # ARRI LogC3 transfer function (compress/decompress)
+├── requirements.txt    # Python dependencies
+├── LICENSE             # MIT
+├── comfyui/            # ComfyUI workflow JSONs (one per base)
+└── assets/examples/    # Example images for README
 ```
 
 ## Citation
