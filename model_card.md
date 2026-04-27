@@ -54,9 +54,14 @@ Single training iteration, 88 MB per LoRA. Apache 2.0 base, 5× smaller than Qwe
 
 ### FLUX.2-klein-base-9B (alpha)
 
-Single training iteration, 158 MB. Larger klein variant — more capacity, more nuanced HDR. Base model is **gated** on HF (request access at the [base model page](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B) before first run).
+Single training iteration, 158 MB per LoRA. Larger klein variant — more capacity, more nuanced HDR. Base model is **gated** on HF (request access at the [base model page](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B) before first run).
 
-- `klein9b_alpha_step2000.safetensors` — only published klein-9B checkpoint.
+- `klein9b_alpha_step2000.safetensors` — **klein-9B default**. Stable, well-behaved (mean p99 9.1, no scenes saturated in our 20-image benchmark).
+- `klein9b_alpha_step1250.safetensors` — most "good" scenes (13/20 in 5-50 p99 range, 0 saturated). Practically the best by per-scene quality count.
+- `klein9b_alpha_step1000.safetensors` — most aggressive (mean p99 20.6, but 4 scenes saturated). Pre-overfit peak HDR range.
+- `klein9b_alpha_step{250,500,750,1500,1750}.safetensors` — intermediate snapshots, available for experimentation.
+
+The training overfit curve was steep on klein-9B (mean p99: 1000=20.6 → 1250=11.1 → 1500=9.3 → 1750=9.6 → 2000=9.1). Step 2000 is the safest default; step 1250 is the practical sweet spot.
 
 ## Usage
 

@@ -63,7 +63,10 @@ python inference_klein.py --image photo.jpg --weight-name klein4b_alpha_step1000
 ```
 
 **FLUX.2-klein-base-9B path** (alpha, more capacity):
-- `klein9b_alpha_step2000.safetensors` — only published klein-9B checkpoint. More nuanced output than klein-4B (less raw range, but better-behaved across scene types — see "Comparison").
+- `klein9b_alpha_step2000.safetensors` — **klein-9B default**. Stable, well-behaved.
+- `klein9b_alpha_step1250.safetensors` — best practical sweet spot (most "good" scenes, no saturation).
+- `klein9b_alpha_step1000.safetensors` — pre-overfit peak (most aggressive HDR, occasional blowout).
+- `klein9b_alpha_step{250,500,750,1500,1750}.safetensors` — intermediate snapshots for experimentation.
 
 The base model is **gated** on HuggingFace — request access at https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B before first run.
 
