@@ -9,9 +9,10 @@ Based on the [LumiVid](https://hdr-lumivid.github.io/) research ([paper](https:/
 | Base model | Status | LoRA size | Inference speed | Notes |
 |---|---|---|---|---|
 | **Qwen-Image-Edit-2511** | mature (5+ iterations) | 563 MB | 1× | best quality, ~20B base, ~54 GB to download |
-| **FLUX.2-klein-base-4B** | **alpha** (1 iteration) | 88 MB | ~2× faster | Apache 2.0, ~8 GB base, faster end-to-end |
+| **FLUX.2-klein-base-4B** | **alpha** (1 iteration) | 88 MB | ~2× faster | Apache 2.0, ~8 GB base, fastest end-to-end |
+| **FLUX.2-klein-base-9B** | **alpha** (1 iteration) | 158 MB | ~1× | gated, more capacity than 4B, more nuanced HDR |
 
-The Qwen-Image-Edit path is the production default. The klein-4B path is an early experiment — same dataset, same hyperparameters — that ran fast enough to be worth shipping but hasn't been iterated on. See "Quickstart" below to pick one.
+The Qwen-Image-Edit path is the production default. The two klein paths are early experiments — same dataset, same hyperparameters — that ran fast enough to be worth shipping but haven't been iterated on. See "Quickstart" below to pick one.
 
 ## How It Works
 
@@ -52,13 +53,23 @@ python inference.py --image photo.jpg                                   # uses v
 python inference.py --image photo.jpg --weight-name v9_step1500.safetensors
 ```
 
-**FLUX.2-klein-base-4B path** (alpha, faster):
-- `klein4b_alpha_step1750.safetensors` — **klein default**. Faithful HDR look, well-balanced.
+**FLUX.2-klein-base-4B path** (alpha, fastest):
+- `klein4b_alpha_step1750.safetensors` — **klein-4B default**. Faithful HDR look, well-balanced.
 - `klein4b_alpha_step1000.safetensors` — alternative. More aggressive HDR (higher p99) but tends to blow out highlights on bright scenes.
 
 ```bash
 python inference_klein.py --image photo.jpg                                          # uses 1750 by default
 python inference_klein.py --image photo.jpg --weight-name klein4b_alpha_step1000.safetensors
+```
+
+**FLUX.2-klein-base-9B path** (alpha, more capacity):
+- `klein9b_alpha_step2000.safetensors` — only published klein-9B checkpoint. More nuanced output than klein-4B (less raw range, but better-behaved across scene types — see "Comparison").
+
+The base model is **gated** on HuggingFace — request access at https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B before first run.
+
+```bash
+python inference_klein.py --image photo.jpg --base black-forest-labs/FLUX.2-klein-base-9B \
+    --weight-name klein9b_alpha_step2000.safetensors
 ```
 
 ### 3. Base model
@@ -69,6 +80,7 @@ Whichever LoRA you pick, the base model downloads automatically on first run via
 |---|---|---|
 | `v5b_*`, `v9_*`, `hdrdit_v1_*` | [Qwen/Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) | ~54 GB |
 | `klein4b_*` | [black-forest-labs/FLUX.2-klein-base-4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B) | ~8 GB |
+| `klein9b_*` | [black-forest-labs/FLUX.2-klein-base-9B](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B) (gated) | ~17 GB |
 
 ```bash
 export HF_HOME=/path/to/cache  # optional, controls where bases cache
@@ -137,6 +149,7 @@ Two ready-to-use workflows are included, one for each base:
 |---|---|---|
 | [`comfyui/SDR_To_HDR_QE11.json`](comfyui/SDR_To_HDR_QE11.json) | Qwen-Image-Edit-2511 + `v5b_step2000.safetensors` | `ComfyUI/models/loras/qwen/hdr/` |
 | [`comfyui/SDR_To_HDR_klein4b.json`](comfyui/SDR_To_HDR_klein4b.json) | FLUX.2-klein-base-4B + `klein4b_alpha_step1750.safetensors` | `ComfyUI/models/loras/flux/hdr/` |
+| [`comfyui/SDR_To_HDR_klein9b.json`](comfyui/SDR_To_HDR_klein9b.json) | FLUX.2-klein-base-9B + `klein9b_alpha_step2000.safetensors` | `ComfyUI/models/loras/flux/hdr/` |
 
 Both also live on the [HuggingFace repo](https://huggingface.co/oumoumad/LumiPic). They both use the `Gear · LogC3 Decode + Save EXR` node from [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) for the LogC3 decode + float16 EXR write.
 

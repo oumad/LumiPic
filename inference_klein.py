@@ -41,6 +41,10 @@ DEFAULT_LORA_REPO = "oumoumad/LumiPic"
 DEFAULT_LORA_WEIGHT = "klein4b_alpha_step1750.safetensors"
 DEFAULT_BASE_MODEL = "black-forest-labs/FLUX.2-klein-base-4B"
 
+# klein-9B variant — pass --base black-forest-labs/FLUX.2-klein-base-9B
+# along with --weight-name klein9b_alpha_step2000.safetensors. The 9B base
+# is gated; accept the license at the HF page first.
+
 
 def tonemap_reinhard(hdr, gamma=2.2):
     hdr = np.maximum(hdr, 0)
@@ -134,7 +138,8 @@ def main():
     g.add_argument("--image-dir", type=str)
     ap.add_argument("--output", type=str, default=None)
     ap.add_argument("--output-dir", type=str, default="./hdr_output")
-    ap.add_argument("--model", type=str, default=DEFAULT_BASE_MODEL)
+    ap.add_argument("--model", "--base", type=str, default=DEFAULT_BASE_MODEL,
+                    help="Base model HF id. Use FLUX.2-klein-base-9B with klein9b_* weights.")
     ap.add_argument("--lora", type=str, default=DEFAULT_LORA_REPO)
     ap.add_argument("--weight-name", type=str, default=DEFAULT_LORA_WEIGHT)
     ap.add_argument("--steps", type=int, default=25)

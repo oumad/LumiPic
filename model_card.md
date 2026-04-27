@@ -13,6 +13,7 @@ tags:
 base_model:
   - Qwen/Qwen-Image-Edit-2511
   - black-forest-labs/FLUX.2-klein-base-4B
+  - black-forest-labs/FLUX.2-klein-base-9B
 license: mit
 ---
 
@@ -46,10 +47,16 @@ Same 20 HDR outputs, viewed at two extreme exposure offsets — highlights still
 
 ### FLUX.2-klein-base-4B (alpha)
 
-Single training iteration, 88 MB per LoRA. Apache 2.0 base, 5× smaller, ~2× faster end-to-end.
+Single training iteration, 88 MB per LoRA. Apache 2.0 base, 5× smaller than Qwen, fastest end-to-end.
 
-- `klein4b_alpha_step1750.safetensors` — **klein default**. Faithful HDR look; well-balanced.
+- `klein4b_alpha_step1750.safetensors` — **klein-4B default**. Faithful HDR look; well-balanced.
 - `klein4b_alpha_step1000.safetensors` — alternative. Aggressive HDR (higher p99) but tends to blow out bright highlights.
+
+### FLUX.2-klein-base-9B (alpha)
+
+Single training iteration, 158 MB. Larger klein variant — more capacity, more nuanced HDR. Base model is **gated** on HF (request access at the [base model page](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B) before first run).
+
+- `klein9b_alpha_step2000.safetensors` — only published klein-9B checkpoint.
 
 ## Usage
 
@@ -69,14 +76,20 @@ output = pipe(prompt="Convert this image to HDR", image=image,
 # Decode LogC3 → linear HDR (see logc3.py in GitHub repo)
 ```
 
-**FLUX.2-klein-base-4B** (requires bleeding-edge diffusers: `pip install "git+https://github.com/huggingface/diffusers.git"`):
+**FLUX.2-klein-base-4B / 9B** (requires bleeding-edge diffusers: `pip install "git+https://github.com/huggingface/diffusers.git"`):
 ```python
 from diffusers import Flux2KleinPipeline
 import torch
 from PIL import Image
 
+# 4B (Apache 2.0, ungated)
 pipe = Flux2KleinPipeline.from_pretrained("black-forest-labs/FLUX.2-klein-base-4B", torch_dtype=torch.bfloat16)
 pipe.load_lora_weights("oumoumad/LumiPic", weight_name="klein4b_alpha_step1750.safetensors")
+
+# 9B (gated — accept license on HF first)
+# pipe = Flux2KleinPipeline.from_pretrained("black-forest-labs/FLUX.2-klein-base-9B", torch_dtype=torch.bfloat16)
+# pipe.load_lora_weights("oumoumad/LumiPic", weight_name="klein9b_alpha_step2000.safetensors")
+
 pipe.enable_model_cpu_offload()  # or pipe.to("cuda") if you have 32GB+
 
 image = Image.open("photo.jpg").convert("RGB")
@@ -99,9 +112,10 @@ The base model and LoRA weights download automatically on first run.
 
 ## ComfyUI
 
-Two ready-to-use workflows:
+Three ready-to-use workflows:
 - [`SDR_To_HDR_QE11.json`](https://huggingface.co/oumoumad/LumiPic/resolve/main/SDR_To_HDR_QE11.json?download=true) — Qwen-Image-Edit-2511
 - [`SDR_To_HDR_klein4b.json`](https://huggingface.co/oumoumad/LumiPic/resolve/main/SDR_To_HDR_klein4b.json?download=true) — FLUX.2-klein-base-4B
+- [`SDR_To_HDR_klein9b.json`](https://huggingface.co/oumoumad/LumiPic/resolve/main/SDR_To_HDR_klein9b.json?download=true) — FLUX.2-klein-base-9B
 
 Both use the `Gear · LogC3 Decode + Save EXR` node from [ComfyUI_Gear](https://github.com/oumad/ComfyUI_Gear) for the LogC3 decode + EXR write. Drop the JSON onto your canvas, place the matching LoRA file in `ComfyUI/models/loras/{qwen,flux}/hdr/`, install ComfyUI_Gear, queue with prompt `"Convert this image to HDR"`.
 
